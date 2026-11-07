@@ -1,12 +1,7 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\NSQ Event Management\\NSQ-Event-Management-System\\plugins\\NSQ.EventManagement.Plugins\\",
-  "Documents": [
-    {
-      "AbsoluteMoniker": "D:0:0:{2E7199E7-E01D-4A16-8BDB-5C08A888412F}|NSQ.EventManagement.Plugins.csproj|c:\\nsq event management\\nsq-event-management-system\\plugins\\nsq.eventmanagement.plugins\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{2E7199E7-E01D-4A16-8BDB-5C08A888412F}|NSQ.EventManagement.Plugins.csproj|solutionrelative:class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    }
-  ],
+  "Documents": [],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -14,20 +9,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": -1,
           "Children": [
             {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Class1.cs",
-              "DocumentMoniker": "C:\\NSQ Event Management\\NSQ-Event-Management-System\\plugins\\NSQ.EventManagement.Plugins\\Class1.cs",
-              "RelativeDocumentMoniker": "Class1.cs",
-              "ToolTip": "C:\\NSQ Event Management\\NSQ-Event-Management-System\\plugins\\NSQ.EventManagement.Plugins\\Class1.cs",
-              "RelativeToolTip": "Class1.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-11-07T09:58:17.97Z",
-              "EditorCaption": ""
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
             }
           ]
         }

@@ -90,18 +90,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attendee\Class1.cs" />
+    <Compile Include="Event Registration\Class1.cs" />
+    <Compile Include="Event\Class1.cs" />
+    <Compile Include="Feedback\Class1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Session\Class1.cs" />
+    <Compile Include="Speaker\Class1.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Event Registration\" />
-    <Folder Include="Event\" />
-    <Folder Include="Feedback\" />
-    <Folder Include="Session\" />
-    <Folder Include="Speaker\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
