@@ -253,3 +253,71 @@ HPSTEvent.validateEndDate = function (executionContext) {
     endDateControl.clearNotification("EndDateRequired");
 };
 
+/*
+=================================================
+Validation #1A
+
+Function Name :
+validateEndDate
+
+Purpose :
+Ensure End Date is greater than
+Start Date.
+
+If invalid:
+- Show validation message
+- Clear End Date
+
+Registered Event:
+End Date On Change
+=================================================
+*/
+HPSTEvent.validateEndDate = function (executionContext) {
+
+    // Get current form context
+    var formContext = executionContext.getFormContext();
+
+    // Get Start Date value
+    var startDate =
+        formContext.getAttribute("hpst_startdate").getValue();
+
+    // Get End Date value
+    var endDate =
+        formContext.getAttribute("hpst_enddate").getValue();
+
+    // Get End Date control
+    var endDateControl =
+        formContext.getControl("hpst_enddate");
+
+    // Exit if control unavailable
+    if (!endDateControl) {
+        return;
+    }
+
+    // Remove previous validation message
+    endDateControl.clearNotification("EndDateValidation");
+
+    // Exit if either date is blank
+    if (!startDate || !endDate) {
+        return;
+    }
+
+    // End Date must be greater than Start Date
+    if (endDate <= startDate) {
+
+        // Clear invalid End Date
+        formContext.getAttribute("hpst_enddate").setValue(null);
+
+        // Show validation message
+        endDateControl.setNotification(
+            "End Date must be greater than Start Date.",
+            "EndDateValidation"
+        );
+
+        return;
+    }
+
+    // Remove validation message when valid
+    endDateControl.clearNotification("EndDateValidation");
+    endDateControl.clearNotification("EndDateRequired");
+};
