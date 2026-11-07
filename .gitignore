@@ -1,5 +1,13 @@
-﻿################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
+﻿# Visual Studio
+.vs/
 
-/plugins/NSQ.EventManagement.Plugins/.vs/NSQ.EventManagement.Plugins/FileContentIndex
+# Build output
+bin/
+obj/
+
+# NuGet packages
+packages/
+
+# User files
+*.user
+*.suo
