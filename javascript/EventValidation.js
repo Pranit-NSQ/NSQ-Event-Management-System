@@ -114,3 +114,73 @@ HPSTEvent.switchBPF = function (executionContext) {
         }
     );
 };
+/*
+=================================================
+Validation #7
+
+Function Name :
+validateStartDate
+
+Purpose :
+Prevent users from selecting
+a Start Date in the past.
+
+If invalid: - Show field level validation message - Prevent selection of a past date
+
+
+
+Registered Event:
+Start Date On Change
+=================================================
+*/
+HPSTEvent.validateStartDate = function (executionContext) {
+
+    // Get current form context
+    var formContext = executionContext.getFormContext();
+
+
+
+    // Get Start Date value
+    var startDate =
+        formContext.getAttribute("hpst_startdate")
+            .getValue();
+
+    // Exit if Start Date is empty
+    if (!startDate) {
+
+        formContext.getControl("hpst_startdate")
+            .clearNotification("StartDateValidation");
+
+        return;
+    }
+
+    // Get today's date
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Convert selected date
+    var selectedDate = new Date(startDate);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    // Validate Start Date
+    if (selectedDate < today) {
+
+        // Show error notification
+        formContext.getControl("hpst_startdate")
+            .setNotification(
+                "Start Date cannot be in the past. Please select today or a future date.",
+                "StartDateValidation"
+            );
+        formContext.getAttribute("hpst_startdate")
+            .setValue(null);
+
+    }
+    else {
+
+        // Remove notification if date is valid
+        formContext.getControl("hpst_startdate")
+            .clearNotification(
+                "StartDateValidation"
+            );
+    }
+};
