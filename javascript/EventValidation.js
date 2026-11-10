@@ -184,6 +184,70 @@ HPSTEvent.validateStartDate = function (executionContext) {
             );
     }
 };
+
+/*
+=================================================
+Validation #1
+
+Function Name :
+controlEndDate
+
+Purpose :
+Keep End Date disabled until
+Start Date is selected.
+
+Registered Events:
+1. Form On Load
+2. Start Date On Change
+=================================================
+*/
+HPSTEvent.controlEndDate = function (executionContext) {
+
+    // Get current form context
+    var formContext = executionContext.getFormContext();
+
+    // Get Start Date value
+    var startDate =
+        formContext.getAttribute("hpst_startdate").getValue();
+
+    // Get Start Date control
+    var startDateControl =
+        formContext.getControl("hpst_startdate");
+
+    // Get End Date control
+    var endDateControl =
+        formContext.getControl("hpst_enddate");
+
+    // Exit if controls are unavailable
+    if (!startDateControl || !endDateControl) {
+        return;
+    }
+
+    // Remove old Start Date validation message
+    startDateControl.clearNotification("StartDateRequired");
+
+    // If Start Date is blank
+    if (!startDate) {
+
+        // Disable End Date
+        endDateControl.setDisabled(true);
+
+        // Clear End Date related messages
+        endDateControl.clearNotification("EndDateValidation");
+        endDateControl.clearNotification("EndDateRequired");
+
+        // Clear End Date value
+        formContext.getAttribute("hpst_enddate").setValue(null);
+    }
+    else {
+
+        // Enable End Date
+        endDateControl.setDisabled(false);
+
+        // Remove Start Date required message
+        startDateControl.clearNotification("StartDateRequired");
+    }
+};
 /*
 =================================================
 Validation #1A
@@ -255,27 +319,27 @@ HPSTEvent.validateEndDate = function (executionContext) {
 
 /*
 =================================================
-Validation #1A
+Validation #1B
 
 Function Name :
-validateEndDate
+validateRequiredDatesOnSave
 
 Purpose :
-Ensure End Date is greater than
-Start Date.
-
-If invalid:
-- Show validation message
-- Clear End Date
+Prevent saving when Start Date
+or End Date is blank.
 
 Registered Event:
-End Date On Change
+Form On Save
 =================================================
 */
-HPSTEvent.validateEndDate = function (executionContext) {
+HPSTEvent.validateRequiredDatesOnSave = function (executionContext) {
 
-    // Get current form context
+    // Get form context
     var formContext = executionContext.getFormContext();
+
+    // Get save event arguments
+    var eventArgs =
+        executionContext.getEventArgs();
 
     // Get Start Date value
     var startDate =
@@ -285,39 +349,106 @@ HPSTEvent.validateEndDate = function (executionContext) {
     var endDate =
         formContext.getAttribute("hpst_enddate").getValue();
 
-    // Get End Date control
+    // Get controls
+    var startDateControl =
+        formContext.getControl("hpst_startdate");
+
     var endDateControl =
         formContext.getControl("hpst_enddate");
 
-    // Exit if control unavailable
-    if (!endDateControl) {
-        return;
-    }
+    // Clear previous messages
+    startDateControl.clearNotification("StartDateRequired");
+    endDateControl.clearNotification("EndDateRequired");
 
-    // Remove previous validation message
-    endDateControl.clearNotification("EndDateValidation");
+    // Validation flag
+    var hasValidationError = false;
 
-    // Exit if either date is blank
-    if (!startDate || !endDate) {
-        return;
-    }
+    // Start Date required
+    if (!startDate) {
 
-    // End Date must be greater than Start Date
-    if (endDate <= startDate) {
-
-        // Clear invalid End Date
-        formContext.getAttribute("hpst_enddate").setValue(null);
-
-        // Show validation message
-        endDateControl.setNotification(
-            "End Date must be greater than Start Date.",
-            "EndDateValidation"
+        startDateControl.setNotification(
+            "Start Date is required.",
+            "StartDateRequired"
         );
 
+        hasValidationError = true;
+    }
+
+    // End Date required
+    if (!endDate) {
+
+        endDateControl.setNotification(
+            "End Date is required.",
+            "EndDateRequired"
+        );
+
+        hasValidationError = true;
+    }
+
+    // Prevent Save
+    if (hasValidationError) {
+        eventArgs.preventDefault();
+    }
+};
+
+/*
+=================================================
+Validation #2
+
+Function Name :
+lockEventForm
+
+Purpose :
+If Event Status is Completed
+or Cancelled, make all fields
+on the form read-only.
+
+Registered Events:
+1. Form On Load
+2. Status On Change
+=================================================
+*/
+HPSTEvent.lockEventForm = function (executionContext) {
+
+    // Get current form context
+    var formContext = executionContext.getFormContext();
+
+    // Get Status field attribute
+    var statusAttribute =
+        formContext.getAttribute("hpst_status");
+
+    // Exit if Status field is unavailable
+    if (!statusAttribute) {
         return;
     }
 
-    // Remove validation message when valid
-    endDateControl.clearNotification("EndDateValidation");
-    endDateControl.clearNotification("EndDateRequired");
+    // Get selected Status text
+    var statusText =
+        statusAttribute.getText();
+
+    // Flag to determine lock state
+    var lockForm = false;
+
+    // Check if status is Completed or Cancelled
+    if (
+        statusText === "Completed" ||
+        statusText === "Cancelled"
+    ) {
+        lockForm = true;
+    }
+
+    // Loop through all controls on form
+    formContext.ui.controls.forEach(
+        function (control) {
+
+            // Ensure control supports setDisabled
+            if (
+                control &&
+                typeof control.setDisabled === "function"
+            ) {
+
+                control.setDisabled(lockForm);
+            }
+        }
+    );
 };
