@@ -269,6 +269,7 @@ If invalid:
 - Clear End Date
 
 Registered Event:
+
 End Date On Change
 =================================================
 */
@@ -320,4 +321,78 @@ HPSTEvent.validateEndDate = function (executionContext) {
     // Remove validation message when valid
     endDateControl.clearNotification("EndDateValidation");
     endDateControl.clearNotification("EndDateRequired");
+};
+
+/*
+=================================================
+Validation #1B
+
+Function Name :
+validateRequiredDatesOnSave
+
+Purpose :
+Prevent saving when Start Date
+or End Date is blank.
+
+Registered Event:
+Form On Save
+=================================================
+*/
+HPSTEvent.validateRequiredDatesOnSave = function (executionContext) {
+
+    // Get form context
+    var formContext = executionContext.getFormContext();
+
+    // Get save event arguments
+    var eventArgs =
+        executionContext.getEventArgs();
+
+    // Get Start Date value
+    var startDate =
+        formContext.getAttribute("hpst_startdate").getValue();
+
+    // Get End Date value
+    var endDate =
+        formContext.getAttribute("hpst_enddate").getValue();
+
+    // Get controls
+    var startDateControl =
+        formContext.getControl("hpst_startdate");
+
+    var endDateControl =
+        formContext.getControl("hpst_enddate");
+
+    // Clear previous messages
+    startDateControl.clearNotification("StartDateRequired");
+    endDateControl.clearNotification("EndDateRequired");
+
+    // Validation flag
+    var hasValidationError = false;
+
+    // Start Date required
+    if (!startDate) {
+
+        startDateControl.setNotification(
+            "Start Date is required.",
+            "StartDateRequired"
+        );
+
+        hasValidationError = true;
+    }
+
+    // End Date required
+    if (!endDate) {
+
+        endDateControl.setNotification(
+            "End Date is required.",
+            "EndDateRequired"
+        );
+
+        hasValidationError = true;
+    }
+
+    // Prevent Save
+    if (hasValidationError) {
+        eventArgs.preventDefault();
+    }
 };
