@@ -396,3 +396,65 @@ HPSTEvent.validateRequiredDatesOnSave = function (executionContext) {
         eventArgs.preventDefault();
     }
 };
+
+/*
+=================================================
+Validation #2
+
+Function Name :
+lockEventForm
+
+Purpose :
+If Event Status is Completed
+or Cancelled, make all fields
+on the form read-only.
+
+Registered Events:
+1. Form On Load
+2. Status On Change
+=================================================
+*/
+HPSTEvent.lockEventForm = function (executionContext) {
+
+    // Get current form context
+    var formContext = executionContext.getFormContext();
+
+    // Get Status field attribute
+    var statusAttribute =
+        formContext.getAttribute("hpst_status");
+
+    // Exit if Status field is unavailable
+    if (!statusAttribute) {
+        return;
+    }
+
+    // Get selected Status text
+    var statusText =
+        statusAttribute.getText();
+
+    // Flag to determine lock state
+    var lockForm = false;
+
+    // Check if status is Completed or Cancelled
+    if (
+        statusText === "Completed" ||
+        statusText === "Cancelled"
+    ) {
+        lockForm = true;
+    }
+
+    // Loop through all controls on form
+    formContext.ui.controls.forEach(
+        function (control) {
+
+            // Ensure control supports setDisabled
+            if (
+                control &&
+                typeof control.setDisabled === "function"
+            ) {
+
+                control.setDisabled(lockForm);
+            }
+        }
+    );
+};
