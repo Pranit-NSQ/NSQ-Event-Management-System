@@ -112,3 +112,52 @@ HPST_Attendee.validateNameFields = function (executionContext) {
         return;
     }
 };
+
+
+// Create namespace to avoid global scope pollution
+var HPST_Attendee = HPST_Attendee || {};
+
+/**
+ * Validation 6
+ * Purpose:
+ * Ensure Preferred Contact Method is selected before saving.
+ *
+ * Business Requirement:
+ * Preferred Contact Method cannot be blank.
+ *
+ * If the field is empty:
+ * 1. Display an error message.
+ * 2. Prevent the record from being saved.
+ */
+HPST_Attendee.validatePreferredContactMethod = function (executionContext) {
+
+    // Get current form context
+    var formContext = executionContext.getFormContext();
+
+    // Get event arguments (used to stop save operation)
+    var eventArgs = executionContext.getEventArgs();
+
+    // Get Preferred Contact Method value
+    var preferredContactMethod = formContext
+        .getAttribute("hpst_preferredcontactmethod")
+        .getValue();
+
+    // Clear previous notification
+    formContext.ui.clearFormNotification("PreferredContactMethodValidation");
+
+    // Check if Preferred Contact Method is empty
+    if (preferredContactMethod === null) {
+
+        // Show error message to user
+        formContext.ui.setFormNotification(
+            "Preferred Contact Method is required.",
+            "ERROR",
+            "PreferredContactMethodValidation"
+        );
+
+        // Prevent record from being saved
+        if (eventArgs) {
+            eventArgs.preventDefault();
+        }
+    }
+};
