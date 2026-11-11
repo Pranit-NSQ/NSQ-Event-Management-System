@@ -161,3 +161,79 @@ HPST_Attendee.validatePreferredContactMethod = function (executionContext) {
         }
     }
 };
+
+
+// Create namespace to avoid global scope pollution
+var HPST_Attendee = HPST_Attendee || {};
+
+/**
+ * Validation 7
+ * Purpose:
+ * Validate Email and Phone formats before saving the Attendee record.
+ *
+ * Business Rules:
+ * 1. Email must be in a valid format (example: abc@example.com)
+ * 2. Phone must start with '+' and contain only numeric digits
+ * 3. If validation fails, show an error message and prevent save
+ */
+HPST_Attendee.validateContactFormats = function (executionContext) {
+
+    // Get current form context
+    var formContext = executionContext.getFormContext();
+
+    // Get save event arguments (used to stop save operation)
+    var eventArgs = executionContext.getEventArgs();
+
+    // Get Email value
+    var email = formContext.getAttribute("hpst_email")?.getValue();
+
+    // Get Phone value
+    var phone = formContext.getAttribute("hpst_phone")?.getValue();
+
+    // Clear previous notifications
+    formContext.ui.clearFormNotification("EmailFormatValidation");
+    formContext.ui.clearFormNotification("PhoneFormatValidation");
+
+    // Regular expression for email validation
+    // Example valid: abc@example.com
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Regular expression for phone validation
+    // Must start with '+' followed by digits only
+    // Example valid: +919876543210
+    var phoneRegex = /^\+\d+$/;
+
+    // Validate Email format if Email contains a value
+    if (email && !emailRegex.test(email)) {
+
+        formContext.ui.setFormNotification(
+            "Please enter a valid Email Address (example: abc@example.com).",
+            "ERROR",
+            "EmailFormatValidation"
+        );
+
+        // Prevent record save
+        if (eventArgs) {
+            eventArgs.preventDefault();
+        }
+
+        return;
+    }
+
+    // Validate Phone format if Phone contains a value
+    if (phone && !phoneRegex.test(phone)) {
+
+        formContext.ui.setFormNotification(
+            "Phone Number must start with '+' and contain only numeric digits.",
+            "ERROR",
+            "PhoneFormatValidation"
+        );
+
+        // Prevent record save
+        if (eventArgs) {
+            eventArgs.preventDefault();
+        }
+
+        return;
+    }
+};
