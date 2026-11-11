@@ -61,7 +61,7 @@ namespace NSQ.EventManagement.Plugins.Event
                 if (sessions.Entities.Count == 0)
                 {
                     throw new InvalidPluginExecutionException(
-   "Cannot change Event Status to Scheduled. Please create at least one Session for this Event first.");
+                    "Cannot change Event Status to Scheduled. Please create at least one Session for this Event first.");
                 }
             }
             catch (InvalidPluginExecutionException)
@@ -69,9 +69,9 @@ namespace NSQ.EventManagement.Plugins.Event
                 throw;
             }
             catch (Exception)
-            {
-                throw new InvalidPluginExecutionException(
-     "An unexpected error occurred while validating the Event.");
+            {    
+                    throw new InvalidPluginExecutionException(
+                     "An unexpected error occurred while validating the Event.");
             }
 
         }
