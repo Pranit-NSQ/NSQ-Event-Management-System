@@ -99,6 +99,7 @@
     <Compile Include="Event Registration\Class1.cs" />
     <Compile Include="Event\ValidateEventSchedulePlugin.cs" />
     <Compile Include="Feedback\Class1.cs" />
+    <Compile Include="Feedback\PreventSessionDelete.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session\Class1.cs" />
     <Compile Include="Speaker\Class1.cs" />
