@@ -98,7 +98,7 @@
   <ItemGroup>
     <Compile Include="Attendee\ValidateAttendeeContactInformation.cs" />
     <Compile Include="Attendee\PreventDuplicateAttendee.cs" />
-    <Compile Include="Event Registration\Class1.cs" />
+    <Compile Include="Event Registration\PreventRegistrationForCancelledCompletedEvent.cs" />
     <Compile Include="Event\ValidateEventSchedulePlugin.cs" />
     <Compile Include="Feedback\Class1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
