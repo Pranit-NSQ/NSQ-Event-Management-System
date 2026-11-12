@@ -104,7 +104,7 @@
     <Compile Include="Feedback\PreventSessionDelete.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session\Class1.cs" />
-    <Compile Include="Speaker\Class1.cs" />
+    <Compile Include="Speaker\SpeakerDuplicateEmailPhonePlugin1.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
