@@ -1,0 +1,2 @@
+C:\NSQ Event management\NSQ-Event-Management-System\plugins\NSQ.EventManagement.Plugins\obj\Debug\NSQ.EventManagement.Plugins.csproj.AssemblyReference.cache
+C:\NSQ Event management\NSQ-Event-Management-System\plugins\NSQ.EventManagement.Plugins\obj\Debug\NSQ.EventManagement.Plugins.csproj.CoreCompileInputs.cache
