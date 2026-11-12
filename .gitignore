@@ -1,1 +1,11 @@
-﻿Plugin validation 2    public class ValidateEventSchedulingPlugin : IPlugin is pending to register 
+﻿Git hub validation 1b to remiangs are pending 
+# Visual Studio
+.vs/
+
+# Build output
+bin/
+obj/
+
+# User files
+*.user
+*.suo
