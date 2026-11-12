@@ -101,3 +101,151 @@ function populateEventDates(executionContext) {
         }
     );
 }
+
+
+/**
+ * Validation 5:
+ * Block registration creation if attendee's Email OR Phone is missing.
+ *
+ * Purpose:
+ * Ensures every attendee has complete contact information
+ * before an Event Registration can be created.
+ *
+ * Validation Rule:
+ * - Email is mandatory.
+ * - Phone Number is mandatory.
+ * - If either value is missing, the registration cannot be saved.
+ */
+
+var EventRegistrationValidation = EventRegistrationValidation || {};
+
+/**
+ * Runs on Event Registration form save.
+ * Validates the selected Attendee's contact information.
+ */
+EventRegistrationValidation.validateAttendeeContactDetails = async function (executionContext) {
+
+    var formContext = executionContext.getFormContext();
+    var eventArgs = executionContext.getEventArgs();
+
+    // Get Attendee lookup value
+    var attendeeLookup = formContext.getAttribute("hpst_attendee");
+
+    // Exit if no attendee is selected
+    if (!attendeeLookup || attendeeLookup.getValue() === null) {
+        return;
+    }
+
+    try {
+
+        // Get selected Attendee record Id
+        var attendeeId = attendeeLookup.getValue()[0].id.replace(/[{}]/g, "");
+
+        // Retrieve Email and Phone from Attendee table
+        var attendee = await Xrm.WebApi.retrieveRecord(
+            "hpst_attendee",
+            attendeeId,
+            "?$select=hpst_email,hpst_phone"
+        );
+
+        var email = attendee.hpst_email;
+        var phone = attendee.hpst_phone;
+
+        // Validation:
+        // Block save if Email OR Phone is missing
+        if (!email || email.trim() === "" ||
+            !phone || phone.trim() === "") {
+
+            eventArgs.preventDefault();
+
+            Xrm.Navigation.openAlertDialog({
+                text: "Registration cannot be created. The selected attendee must have both Email and Phone Number populated."
+            });
+
+            return;
+        }
+
+    }
+    catch (error) {
+
+        console.error("Validation Error:", error);
+
+        Xrm.Navigation.openAlertDialog({
+            text: "An error occurred while validating attendee contact information."
+        });
+    }
+};
+
+
+/**
+ * Validation 5:
+ * Block registration creation if attendee's Email OR Phone is missing.
+ *
+ * Purpose:
+ * Ensures every attendee has complete contact information
+ * before an Event Registration can be created.
+ *
+ * Validation Rule:
+ * - Email is mandatory.
+ * - Phone Number is mandatory.
+ * - If either value is missing, the registration cannot be saved.
+ */
+
+var EventRegistrationValidation = EventRegistrationValidation || {};
+
+/**
+ * Runs on Event Registration form save.
+ * Validates the selected Attendee's contact information.
+ */
+EventRegistrationValidation.validateAttendeeContactDetails = async function (executionContext) {
+
+    var formContext = executionContext.getFormContext();
+    var eventArgs = executionContext.getEventArgs();
+
+    // Get Attendee lookup value
+    var attendeeLookup = formContext.getAttribute("hpst_attendee");
+
+    // Exit if no attendee is selected
+    if (!attendeeLookup || attendeeLookup.getValue() === null) {
+        return;
+    }
+
+    try {
+
+        // Get selected Attendee record Id
+        var attendeeId = attendeeLookup.getValue()[0].id.replace(/[{}]/g, "");
+
+        // Retrieve Email and Phone from Attendee table
+        var attendee = await Xrm.WebApi.retrieveRecord(
+            "hpst_attendee",
+            attendeeId,
+            "?$select=hpst_email,hpst_phone"
+        );
+
+        var email = attendee.hpst_email;
+        var phone = attendee.hpst_phone;
+
+        // Validation:
+        // Block save if Email OR Phone is missing
+        if (!email || email.trim() === "" ||
+            !phone || phone.trim() === "") {
+
+            eventArgs.preventDefault();
+
+            Xrm.Navigation.openAlertDialog({
+                text: "Registration cannot be created. The selected attendee must have both Email and Phone Number populated."
+            });
+
+            return;
+        }
+
+    }
+    catch (error) {
+
+        console.error("Validation Error:", error);
+
+        Xrm.Navigation.openAlertDialog({
+            text: "An error occurred while validating attendee contact information."
+        });
+    }
+};
