@@ -206,6 +206,16 @@ HPSTEvent.controlEndDate = function (executionContext) {
     // Get current form context
     var formContext = executionContext.getFormContext();
 
+    var statusText =
+        formContext.getAttribute("hpst_status").getText();
+
+    if (
+        statusText === "Completed" ||
+        statusText === "Cancelled"
+    ) {
+        return;
+    }
+
     // Get Start Date value
     var startDate =
         formContext.getAttribute("hpst_startdate").getValue();
