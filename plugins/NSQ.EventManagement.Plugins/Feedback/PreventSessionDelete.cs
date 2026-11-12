@@ -48,4 +48,3 @@ namespace NSQ.EventManagement.Plugins.Feedback
         }
     }
 }
-}
