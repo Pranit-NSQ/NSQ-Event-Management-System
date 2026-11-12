@@ -63,3 +63,29 @@ function validateComments(executionContext) {
 
     control.clearNotification("ProfanityCheck");
 }
+//Submitted On should remain read-only after creation.
+function lockSubmittedOn(executionContext) {
+    var formContext = executionContext.getFormContext();
+
+    if (formContext.data.entity.getId()) {
+        formContext.getControl("hpst_submittedon").setDisabled(true);
+    }
+}
+//Comments mandatory when Rating is 1 or 2. 
+function validateCommentsRequired(executionContext) {
+    var formContext = executionContext.getFormContext();
+
+    var rating = formContext.getAttribute("hpst_rating").getValue();
+    var commentsAttribute = formContext.getAttribute("hpst_comments");
+
+    if (!commentsAttribute) {
+        return;
+    }
+
+    if (rating === 1 || rating === 2) {
+        commentsAttribute.setRequiredLevel("required");
+    }
+    else {
+        commentsAttribute.setRequiredLevel("none");
+    }
+}
