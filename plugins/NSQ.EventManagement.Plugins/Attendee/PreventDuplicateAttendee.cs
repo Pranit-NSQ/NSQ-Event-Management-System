@@ -1,164 +1,92 @@
 ﻿using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NSQ.EventManagement.Plugins.Attendee
 {
-    /*
-      * Plugin Name: PreventDuplicateAttendee
-      *
-      * Description:
-      * This plugin prevents the creation or update of duplicate attendee records.
-      * It checks whether another attendee already exists with the same
-      * Email Address or Phone Number.
-      *
-      * Business Requirement:
-      * - Email should be unique across attendees.
-      * - Phone Number should be unique across attendees.
-      *
-      * Validation Message:
-      * "An attendee with the same email or phone number already exists."
-      *
-      * Registration Details:
-      * Message  : Create, Update
-      * Entity   : hpst_attendee
-      * Stage    : Pre-Operation
-      * Mode     : Synchronous
-      */
-
     public class PreventDuplicateAttendee : IPlugin
     {
         public void Execute(IServiceProvider serviceProvider)
         {
-            // Obtain execution context
             IPluginExecutionContext context =
                 (IPluginExecutionContext)serviceProvider.GetService(typeof(IPluginExecutionContext));
 
-            // Ensure Target exists
             if (!(context.InputParameters.Contains("Target") &&
                 context.InputParameters["Target"] is Entity target))
-            {
                 return;
-            }
 
-            // Obtain organization service
-            IOrganizationServiceFactory serviceFactory =
+            IOrganizationServiceFactory factory =
                 (IOrganizationServiceFactory)serviceProvider.GetService(typeof(IOrganizationServiceFactory));
 
             IOrganizationService service =
-                serviceFactory.CreateOrganizationService(context.UserId);
+                factory.CreateOrganizationService(context.UserId);
 
             try
             {
-                string email = string.Empty;
-                string phone = string.Empty;
+                string email = null;
+                string phone = null;
 
-                // Current attendee record id
-                Guid currentRecordId = target.Id;
-
-                // Create operation
-                if (context.MessageName.Equals("Create", StringComparison.OrdinalIgnoreCase))
+                // For Update, get existing values if field is not being changed
+                if (context.MessageName == "Update")
                 {
-                    email = target.Contains("hpst_email")
-                        ? target.GetAttributeValue<string>("hpst_email")
-                        : string.Empty;
-
-                    phone = target.Contains("hpst_phone")
-                        ? target.GetAttributeValue<string>("hpst_phone")
-                        : string.Empty;
-                }
-
-                // Update operation
-                else if (context.MessageName.Equals("Update", StringComparison.OrdinalIgnoreCase))
-                {
-                    Entity existingAttendee = service.Retrieve(
-                        target.LogicalName,
+                    Entity existing = service.Retrieve(
+                        "hpst_attendee",
                         target.Id,
                         new ColumnSet("hpst_email", "hpst_phone"));
 
                     email = target.Contains("hpst_email")
                         ? target.GetAttributeValue<string>("hpst_email")
-                        : existingAttendee.GetAttributeValue<string>("hpst_email");
+                        : existing.GetAttributeValue<string>("hpst_email");
 
                     phone = target.Contains("hpst_phone")
                         ? target.GetAttributeValue<string>("hpst_phone")
-                        : existingAttendee.GetAttributeValue<string>("hpst_phone");
+                        : existing.GetAttributeValue<string>("hpst_phone");
+                }
+                else
+                {
+                    email = target.GetAttributeValue<string>("hpst_email");
+                    phone = target.GetAttributeValue<string>("hpst_phone");
                 }
 
-                // Trim values to avoid accidental spaces
-                email = email?.Trim();
-                phone = phone?.Trim();
+                QueryExpression query = new QueryExpression("hpst_attendee")
+                {
+                    ColumnSet = new ColumnSet(false)
+                };
 
-                /*
-                 * Duplicate Email Check
-                 */
+                FilterExpression filter =
+                    new FilterExpression(LogicalOperator.Or);
+
                 if (!string.IsNullOrWhiteSpace(email))
                 {
-                    QueryExpression emailQuery = new QueryExpression(target.LogicalName)
-                    {
-                        ColumnSet = new ColumnSet(false)
-                    };
-
-                    emailQuery.Criteria.AddCondition(
+                    filter.AddCondition(
                         "hpst_email",
                         ConditionOperator.Equal,
-                        email);
-
-                    // Exclude current record during update
-                    if (currentRecordId != Guid.Empty)
-                    {
-                        emailQuery.Criteria.AddCondition(
-                            target.LogicalName + "id",
-                            ConditionOperator.NotEqual,
-                            currentRecordId);
-                    }
-
-                    EntityCollection duplicateEmails =
-                        service.RetrieveMultiple(emailQuery);
-
-                    if (duplicateEmails.Entities.Count > 0)
-                    {
-                        throw new InvalidPluginExecutionException(
-                            "An attendee with the same email or phone number already exists.");
-                    }
+                        email.Trim());
                 }
 
-                /*
-                 * Duplicate Phone Check
-                 */
                 if (!string.IsNullOrWhiteSpace(phone))
                 {
-                    QueryExpression phoneQuery = new QueryExpression(target.LogicalName)
-                    {
-                        ColumnSet = new ColumnSet(false)
-                    };
-
-                    phoneQuery.Criteria.AddCondition(
+                    filter.AddCondition(
                         "hpst_phone",
                         ConditionOperator.Equal,
-                        phone);
+                        phone.Trim());
+                }
 
-                    // Exclude current record during update
-                    if (currentRecordId != Guid.Empty)
-                    {
-                        phoneQuery.Criteria.AddCondition(
-                            target.LogicalName + "hpst_attendee",
-                            ConditionOperator.NotEqual,
-                            currentRecordId);
-                    }
+                query.Criteria.AddFilter(filter);
 
-                    EntityCollection duplicatePhones =
-                        service.RetrieveMultiple(phoneQuery);
+                // Exclude current record during update
+                if (target.Id != Guid.Empty)
+                {
+                    query.Criteria.AddCondition(
+                        "hpst_attendeeid",
+                        ConditionOperator.NotEqual,
+                        target.Id);
+                }
 
-                    if (duplicatePhones.Entities.Count > 0)
-                    {
-                        throw new InvalidPluginExecutionException(
-                            "An attendee with the same email or phone number already exists.");
-                    }
+                if (service.RetrieveMultiple(query).Entities.Count > 0)
+                {
+                    throw new InvalidPluginExecutionException(
+                        "An attendee with the same email or phone number already exists.");
                 }
             }
             catch (InvalidPluginExecutionException)
@@ -168,7 +96,7 @@ namespace NSQ.EventManagement.Plugins.Attendee
             catch (Exception ex)
             {
                 throw new InvalidPluginExecutionException(
-                    $"Error in PreventDuplicateAttendee plugin: {ex.Message}");
+                    "Error validating attendee record: " + ex.Message);
             }
         }
     }
