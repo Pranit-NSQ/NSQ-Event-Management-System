@@ -49,7 +49,7 @@ namespace NSQ.EventManagement.Plugins.Feedback
                 };
 
                 query.Criteria.AddCondition(
-                    "hpst_sessionid",
+                    "hpst_session",
                     ConditionOperator.Equal,
                     sessionRef.Id);
 
