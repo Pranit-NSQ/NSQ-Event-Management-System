@@ -5,7 +5,7 @@ using Microsoft.Xrm.Sdk.Query;
 namespace NSQ.EventManagement.Plugins.Speaker
 {
 
-    public class SpeakerDuplicateEmailPhonePlugin : IPlugin
+    public class SpeakerDuplicateEmailPhonePlugin1 : IPlugin
 
     {
 
