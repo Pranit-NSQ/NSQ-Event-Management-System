@@ -178,74 +178,66 @@ EventRegistrationValidation.validateAttendeeContactDetails = async function (exe
 
 
 /**
- * Validation 5:
- * Block registration creation if attendee's Email OR Phone is missing.
+ * Validation 7:
+ * Registration Status cannot move from Cancelled back to Registered.
  *
  * Purpose:
- * Ensures every attendee has complete contact information
- * before an Event Registration can be created.
- *
- * Validation Rule:
- * - Email is mandatory.
- * - Phone Number is mandatory.
- * - If either value is missing, the registration cannot be saved.
+ * Prevents users from reactivating a registration once it has been
+ * cancelled. This maintains the integrity of the registration lifecycle
+ * and ensures that a cancelled registration cannot be reverted back
+ * to the Registered status.
  */
 
-var EventRegistrationValidation = EventRegistrationValidation || {};
+// Variable to store the original status value
+var originalRegistrationStatus = null;
 
 /**
- * Runs on Event Registration form save.
- * Validates the selected Attendee's contact information.
+ * Executes on form load.
+ * Stores the current Registration Status for later comparison.
  */
-EventRegistrationValidation.validateAttendeeContactDetails = async function (executionContext) {
+function storeOriginalStatus(executionContext) {
+
+    var formContext = executionContext.getFormContext();
+
+    var statusAttribute = formContext.getAttribute("hpst_statuser");
+
+    if (statusAttribute) {
+        originalRegistrationStatus = statusAttribute.getValue();
+    }
+}
+
+/**
+ * Executes on form save.
+ * Prevents status change from Cancelled to Registered.
+ */
+function preventCancelledToRegistered(executionContext) {
 
     var formContext = executionContext.getFormContext();
     var eventArgs = executionContext.getEventArgs();
 
-    // Get Attendee lookup value
-    var attendeeLookup = formContext.getAttribute("hpst_attendee");
+    var statusAttribute = formContext.getAttribute("hpst_statuser");
 
-    // Exit if no attendee is selected
-    if (!attendeeLookup || attendeeLookup.getValue() === null) {
+    if (!statusAttribute) {
         return;
     }
 
-    try {
+    // Get current selected status
+    var currentStatus = statusAttribute.getValue();
 
-        // Get selected Attendee record Id
-        var attendeeId = attendeeLookup.getValue()[0].id.replace(/[{}]/g, "");
+    var CANCELLED = 744890001;
+    var REGISTERED = 744890000;
 
-        // Retrieve Email and Phone from Attendee table
-        var attendee = await Xrm.WebApi.retrieveRecord(
-            "hpst_attendee",
-            attendeeId,
-            "?$select=hpst_email,hpst_phone"
-        );
+    // Block Cancelled -> Registered transition
+    if (originalRegistrationStatus === CANCELLED &&
+        currentStatus === REGISTERED) {
 
-        var email = attendee.hpst_email;
-        var phone = attendee.hpst_phone;
-
-        // Validation:
-        // Block save if Email OR Phone is missing
-        if (!email || email.trim() === "" ||
-            !phone || phone.trim() === "") {
-
-            eventArgs.preventDefault();
-
-            Xrm.Navigation.openAlertDialog({
-                text: "Registration cannot be created. The selected attendee must have both Email and Phone Number populated."
-            });
-
-            return;
-        }
-
-    }
-    catch (error) {
-
-        console.error("Validation Error:", error);
+        eventArgs.preventDefault();
 
         Xrm.Navigation.openAlertDialog({
-            text: "An error occurred while validating attendee contact information."
+            text: "Registration Status cannot be changed from Cancelled back to Registered."
         });
+
+        // Revert field back to original value
+        statusAttribute.setValue(originalRegistrationStatus);
     }
-};
+}
