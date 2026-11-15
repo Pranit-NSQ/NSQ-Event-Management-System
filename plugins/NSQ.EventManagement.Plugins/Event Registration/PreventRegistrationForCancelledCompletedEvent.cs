@@ -34,16 +34,7 @@ namespace NSQ.EventManagement.Plugins.Event_Registration
             {
                 eventRef = target.GetAttributeValue<EntityReference>("hpst_event");
             }
-            // Update
-            else if (context.MessageName == "Update" && context.PreEntityImages.Contains("PreImage"))
-            {
-                Entity preImage = context.PreEntityImages["PreImage"];
 
-                if (preImage.Contains("hpst_event"))
-                {
-                    eventRef = preImage.GetAttributeValue<EntityReference>("hpst_event");
-                }
-            }
 
             if (eventRef == null)
                 return;
@@ -60,8 +51,8 @@ namespace NSQ.EventManagement.Plugins.Event_Registration
             if (status == null)
                 return;
 
-            int COMPLETED = 4;
-            int CANCELLED = 3;
+            int COMPLETED = 3;
+            int CANCELLED = 4;
 
             if (status.Value == COMPLETED || status.Value == CANCELLED)
             {

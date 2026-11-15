@@ -16,6 +16,11 @@ namespace NSQ.EventManagement.Plugins.Event_Registration
             var context = (IPluginExecutionContext)
                 serviceProvider.GetService(typeof(IPluginExecutionContext));
 
+            if (context.Depth > 1)
+            {
+                return;
+            }
+
             var target = (Entity)context.InputParameters["Target"];
 
             if (!target.Contains("hpst_status"))
