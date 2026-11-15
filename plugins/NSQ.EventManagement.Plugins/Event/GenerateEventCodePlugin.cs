@@ -42,7 +42,7 @@ namespace NSQ.EventManagement.Plugins.Event
                     new QueryExpression("hpst_event");
 
                 query.ColumnSet =
-                    new ColumnSet("hpst_eventcode");
+                    new ColumnSet("hpst_EventCode");
 
                 query.AddOrder(
                     "createdon",
@@ -57,10 +57,10 @@ namespace NSQ.EventManagement.Plugins.Event
                 {
                     foreach (Entity eventRecord in events.Entities)
                     {
-                        if (eventRecord.Contains("hpst_eventcode"))
+                        if (eventRecord.Contains("hpst_EventCode"))
                         {
                             string lastCode =
-                                eventRecord.GetAttributeValue<string>("hpst_eventcode");
+                                eventRecord.GetAttributeValue<string>("hpst_EventCode");
 
                             if (!string.IsNullOrEmpty(lastCode))
                             {
@@ -85,7 +85,7 @@ namespace NSQ.EventManagement.Plugins.Event
                 string eventCode =
                     "EN-" + todayDate + "-" + nextNumber.ToString("D3");
 
-                target["hpst_eventcode"] =
+                target["hpst_EventCode"] =
                     eventCode;
             }
             catch (Exception)
