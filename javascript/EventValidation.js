@@ -138,51 +138,57 @@ HPSTEvent.validateStartDate = function (executionContext) {
     // Get current form context
     var formContext = executionContext.getFormContext();
 
-
-
     // Get Start Date value
     var startDate =
-        formContext.getAttribute("hpst_startdate")
-            .getValue();
+        formContext.getAttribute("hpst_startdate").getValue();
 
-    // Exit if Start Date is empty
+    // Get Start Date control
+    var startDateControl =
+        formContext.getControl("hpst_startdate");
+
+    // Exit if control unavailable
+    if (!startDateControl) {
+        return;
+    }
+
+    // If Start Date is blank
     if (!startDate) {
 
-        formContext.getControl("hpst_startdate")
-            .clearNotification("StartDateValidation");
+        startDateControl.clearNotification("StartDateValidation");
+        startDateControl.clearNotification("StartDateRequired");
 
         return;
     }
 
-    // Get today's date
+    // Clear old notifications
+    startDateControl.clearNotification("StartDateValidation");
+    startDateControl.clearNotification("StartDateRequired");
+
+    // Today's date
     var today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Convert selected date
+    // Selected date
     var selectedDate = new Date(startDate);
     selectedDate.setHours(0, 0, 0, 0);
 
     // Validate Start Date
     if (selectedDate < today) {
 
-        // Show error notification
-        formContext.getControl("hpst_startdate")
-            .setNotification(
-                "Start Date cannot be in the past. Please select today or a future date.",
-                "StartDateValidation"
-            );
+        startDateControl.setNotification(
+            "Start Date cannot be in the past. Please select today or a future date.",
+            "StartDateValidation"
+        );
+
         formContext.getAttribute("hpst_startdate")
             .setValue(null);
 
+        return;
     }
-    else {
 
-        // Remove notification if date is valid
-        formContext.getControl("hpst_startdate")
-            .clearNotification(
-                "StartDateValidation"
-            );
-    }
+    // Remove notifications when valid
+    startDateControl.clearNotification("StartDateValidation");
+    startDateControl.clearNotification("StartDateRequired");
 };
 
 /*
@@ -344,36 +350,29 @@ Form On Save
 */
 HPSTEvent.validateRequiredDatesOnSave = function (executionContext) {
 
-    // Get form context
     var formContext = executionContext.getFormContext();
 
-    // Get save event arguments
     var eventArgs =
         executionContext.getEventArgs();
 
-    // Get Start Date value
     var startDate =
         formContext.getAttribute("hpst_startdate").getValue();
 
-    // Get End Date value
     var endDate =
         formContext.getAttribute("hpst_enddate").getValue();
 
-    // Get controls
     var startDateControl =
         formContext.getControl("hpst_startdate");
 
     var endDateControl =
         formContext.getControl("hpst_enddate");
 
-    // Clear previous messages
+    // Always clear old notifications first
     startDateControl.clearNotification("StartDateRequired");
     endDateControl.clearNotification("EndDateRequired");
 
-    // Validation flag
     var hasValidationError = false;
 
-    // Start Date required
     if (!startDate) {
 
         startDateControl.setNotification(
@@ -384,7 +383,6 @@ HPSTEvent.validateRequiredDatesOnSave = function (executionContext) {
         hasValidationError = true;
     }
 
-    // End Date required
     if (!endDate) {
 
         endDateControl.setNotification(
@@ -395,12 +393,12 @@ HPSTEvent.validateRequiredDatesOnSave = function (executionContext) {
         hasValidationError = true;
     }
 
-    // Prevent Save
+ 
+
     if (hasValidationError) {
         eventArgs.preventDefault();
     }
 };
-
 /*
 =================================================
 Validation #2
@@ -459,6 +457,133 @@ HPSTEvent.lockEventForm = function (executionContext) {
 
                 control.setDisabled(lockForm);
             }
+        }
+    );
+};
+
+/*
+=================================================
+Validation #4 Session Table
+
+Function Name :
+checkUpcomingEventWithoutSession
+
+Purpose :
+If the Event Start Date is less than
+24 hours away and no Session exists
+for the Event, display a warning
+notification on the Event form.
+
+Logic :
+1. Get Event Start Date.
+2. Check whether Event starts within
+   the next 24 hours.
+3. Retrieve related Session records.
+4. If no Session exists, display a
+   warning notification.
+
+Registered Events :
+1. Form On Load
+2. Start Date On Change
+
+=================================================
+*/
+HPSTEvent.checkUpcomingEventWithoutSession = function (executionContext) {
+
+    var formContext = executionContext.getFormContext();
+
+    var notificationId =
+        "UpcomingEventNoSessionWarning";
+
+    // Clear existing warning
+    formContext.ui.clearFormNotification(
+        notificationId
+    );
+
+    // Get Start Date
+    var startDateAttribute =
+        formContext.getAttribute("hpst_startdate");
+
+    if (!startDateAttribute) {
+        return;
+    }
+
+    var startDate =
+        startDateAttribute.getValue();
+
+    if (!startDate) {
+        return;
+    }
+
+    // Current date/time
+    var currentDateTime =
+        new Date();
+
+    // Difference in milliseconds
+    var timeDifference =
+        startDate.getTime() -
+        currentDateTime.getTime();
+
+    // 24 hours
+    var twentyFourHours =
+        24 * 60 * 60 * 1000;
+
+    // Event must start within the next 24 hours
+    if (
+        timeDifference <= 0 ||
+        timeDifference > twentyFourHours
+    ) {
+        return;
+    }
+
+    // Event must be saved before Sessions can exist
+    var eventId =
+        formContext.data.entity.getId();
+
+    if (!eventId) {
+
+        formContext.ui.setFormNotification(
+            "Warning: This Event starts within 24 hours, but no Session has been scheduled.",
+            "WARNING",
+            notificationId
+        );
+
+        return;
+    }
+
+    // Remove brackets from GUID
+    eventId =
+        eventId.replace("{", "")
+               .replace("}", "");
+
+    // Check whether any Session exists
+    Xrm.WebApi.retrieveMultipleRecords(
+        "hpst_session",
+        "?$select=hpst_sessionid" +
+        "&$filter=_hpst_event_value eq " +
+        eventId +
+        "&$top=1"
+    ).then(
+        function (result) {
+
+            if (result.entities.length === 0) {
+
+                formContext.ui.setFormNotification(
+                    "Warning: This Event starts within 24 hours, but no Session has been scheduled.",
+                    "WARNING",
+                    notificationId
+                );
+            }
+            else {
+
+                formContext.ui.clearFormNotification(
+                    notificationId
+                );
+            }
+        },
+        function (error) {
+
+            console.log(error.message);
         }
     );
 };

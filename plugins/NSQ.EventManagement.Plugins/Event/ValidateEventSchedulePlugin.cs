@@ -45,7 +45,9 @@ namespace NSQ.EventManagement.Plugins.Event
                     return;
 
                 QueryExpression sessionQuery =
-                    new QueryExpression("hpst_session");
+    new QueryExpression("hpst_session");
+
+                sessionQuery.TopCount = 1;
 
                 sessionQuery.ColumnSet =
                     new ColumnSet(false);
