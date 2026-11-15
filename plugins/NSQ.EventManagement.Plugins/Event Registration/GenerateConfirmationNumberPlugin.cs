@@ -55,10 +55,13 @@ namespace NSQ.EventManagement.Plugins.Event_Registration
 
             string initials = firstInitial + lastInitial;
 
-            string datePart = DateTime.Now.ToString("ddMM");
+            TimeZoneInfo indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("India Standard Time");
 
-            QueryExpression query =
-                new QueryExpression("hpst_eventregistration");
+            DateTime indiaTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, indiaTimeZone);
+
+            string datePart = indiaTime.ToString("ddMM");
+
+            QueryExpression query = new QueryExpression("hpst_eventregistration");
 
             query.ColumnSet = new ColumnSet(false);
 
