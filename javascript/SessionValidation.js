@@ -77,3 +77,57 @@ NSQ.Session = (function () {
     },
   };
 })();
+
+// Namespace for Session table validations.
+var HPSTSessionValidation = HPSTSessionValidation || {};
+
+// Validation 12:
+// Make the Speaker lookup read-only when Session Status is Completed.
+
+// Function 1: Update the Speaker lookup's enabled/disabled state.
+HPSTSessionValidation.controlSpeakerLookup = function (executionContext) {
+  // Get the form context.
+  var formContext = executionContext.getFormContext();
+
+  // Get the Status column.
+  var statusAttribute = formContext.getAttribute("hpst_status");
+
+  // Get the Speaker lookup column.
+  var speakerAttribute = formContext.getAttribute("hpst_speaker");
+
+  // Stop if either column is unavailable on the form.
+  if (!statusAttribute || !speakerAttribute) {
+    return;
+  }
+
+  // Get the current Status choice value.
+  var statusValue = statusAttribute.getValue();
+
+  // Check whether the Session Status is Completed.
+  var isCompleted = statusValue === 744890002;
+
+  // Enable or disable all controls associated with Speaker.
+  speakerAttribute.controls.forEach(function (control) {
+    control.setDisabled(isCompleted);
+  });
+};
+
+// Function 2: Execute when the Session form loads.
+HPSTSessionValidation.onLoad = function (executionContext) {
+  // Get the form context.
+  var formContext = executionContext.getFormContext();
+
+  // Get the Status column.
+  var statusAttribute = formContext.getAttribute("hpst_status");
+
+  // Stop if Status is unavailable on the form.
+  if (!statusAttribute) {
+    return;
+  }
+
+  // Register the function to run whenever Status changes.
+  statusAttribute.addOnChange(HPSTSessionValidation.controlSpeakerLookup);
+
+  // Check the current Status immediately when the form loads.
+  HPSTSessionValidation.controlSpeakerLookup(executionContext);
+};
