@@ -9,103 +9,122 @@ using System.Threading.Tasks;
 namespace NSQ.EventManagement.Plugins.Event
 {
     public class PreventOverlappingEventPlugin : IPlugin
-    {
-        public void Execute(IServiceProvider serviceProvider)
+   
         {
-            try
+            public void Execute(IServiceProvider serviceProvider)
             {
-                IPluginExecutionContext context =
-                    (IPluginExecutionContext)serviceProvider.GetService(
-                        typeof(IPluginExecutionContext));
-
-                IOrganizationServiceFactory serviceFactory =
-                    (IOrganizationServiceFactory)serviceProvider.GetService(
-                        typeof(IOrganizationServiceFactory));
-
-                IOrganizationService service =
-                    serviceFactory.CreateOrganizationService(context.UserId);
-
-                if (!(context.InputParameters.Contains("Target") &&
-                    context.InputParameters["Target"] is Entity target))
+                try
                 {
-                    return;
-                }
+                    IPluginExecutionContext context =
+                        (IPluginExecutionContext)serviceProvider.GetService(
+                            typeof(IPluginExecutionContext));
 
-                if (target.LogicalName != "hpst_event")
-                {
-                    return;
-                }
+                    IOrganizationServiceFactory serviceFactory =
+                        (IOrganizationServiceFactory)serviceProvider.GetService(
+                            typeof(IOrganizationServiceFactory));
 
-                // Execute only when all required values exist
-                if (!target.Contains("hpst_StartDate") ||
-                    !target.Contains("hpst_EndDate") ||
-                    !target.Contains("hpst_Location"))
-                {
-                    return;
-                }
+                    IOrganizationService service =
+                        serviceFactory.CreateOrganizationService(context.UserId);
 
-                DateTime startDate =
-                    target.GetAttributeValue<DateTime>("hpst_StartDate");
-
-                DateTime endDate =
-                    target.GetAttributeValue<DateTime>("hpst_EndDate");
-
-                EntityReference location =
-                    target.GetAttributeValue<EntityReference>("hpst_Location");
-
-                QueryExpression query =
-                    new QueryExpression("hpst_event");
-
-                query.ColumnSet =
-                    new ColumnSet(
-                        "hpst_StartDate",
-                        "hpst_EndDate",
-                        "hpst_Location");
-
-                query.Criteria.AddCondition(
-                    "hpst_Location",
-                    ConditionOperator.Equal,
-                    location.Id);
-
-                EntityCollection existingEvents =
-                    service.RetrieveMultiple(query);
-
-                foreach (Entity eventRecord in existingEvents.Entities)
-                {
-                    // Skip current record during update
-                    if (eventRecord.Id == context.PrimaryEntityId)
+                    if (!(context.InputParameters.Contains("Target") &&
+                          context.InputParameters["Target"] is Entity target))
                     {
-                        continue;
+                        return;
                     }
 
-                    DateTime existingStart =
-                        eventRecord.GetAttributeValue<DateTime>(
-                            "hpst_StartDate");
+                    if (target.LogicalName != "hpst_event")
+                    {
+                        return;
+                    }
 
-                    DateTime existingEnd =
-                        eventRecord.GetAttributeValue<DateTime>(
-                            "hpst_EndDate");
+                    // Pre-Image (Update only) supplies values not in Target
+                    Entity preImage = context.PreEntityImages.Contains("PreImage")
+                        ? context.PreEntityImages["PreImage"]
+                        : null;
 
-                    bool isOverlapping =
-                        startDate < existingEnd &&
-                        endDate > existingStart;
+                    // Use Target value if present, otherwise Pre-Image value
+                    DateTime? startDate = target.Contains("hpst_startdate")
+                        ? target.GetAttributeValue<DateTime?>("hpst_startdate")
+                        : preImage?.GetAttributeValue<DateTime?>("hpst_startdate");
 
-                    if (isOverlapping)
+                    DateTime? endDate = target.Contains("hpst_enddate")
+                        ? target.GetAttributeValue<DateTime?>("hpst_enddate")
+                        : preImage?.GetAttributeValue<DateTime?>("hpst_enddate");
+
+                    string location = target.Contains("hpst_location")
+                        ? target.GetAttributeValue<string>("hpst_location")
+                        : preImage?.GetAttributeValue<string>("hpst_location");
+
+                    // Execute only when all required values exist
+                    if (startDate == null || endDate == null ||
+                        string.IsNullOrWhiteSpace(location))
+                    {
+                        return;
+                    }
+
+                    if (startDate.Value >= endDate.Value)
                     {
                         throw new InvalidPluginExecutionException(
-                            "Another Event is already scheduled at this location during the selected date and time.");
+                            "End date must be after start date.");
+                    }
+
+                    location = location.Trim();
+
+                    QueryExpression query =
+                        new QueryExpression("hpst_event");
+
+                    query.ColumnSet =
+                        new ColumnSet(
+                            "hpst_startdate",
+                            "hpst_enddate",
+                            "hpst_location");
+
+                    // Only active events that overlap the date range
+                    //query.Criteria.AddCondition(
+                    //    "statecode", ConditionOperator.Equal, 0);
+                    query.Criteria.AddCondition(
+                        "hpst_startdate", ConditionOperator.LessThan, endDate.Value);
+                    query.Criteria.AddCondition(
+                        "hpst_enddate", ConditionOperator.GreaterThan, startDate.Value);
+
+                    EntityCollection existingEvents =
+                        service.RetrieveMultiple(query);
+
+                    foreach (Entity eventRecord in existingEvents.Entities)
+                    {
+                        // Skip current record during update
+                        if (eventRecord.Id == context.PrimaryEntityId)
+                        {
+                            continue;
+                        }
+
+                        string existingLocation =
+                            eventRecord.GetAttributeValue<string>("hpst_location");
+
+                        // Location is multiline text, so compare in code
+                        bool sameLocation =
+                            !string.IsNullOrWhiteSpace(existingLocation) &&
+                            string.Equals(
+                                existingLocation.Trim(),
+                                location,
+                                StringComparison.OrdinalIgnoreCase);
+
+                        if (sameLocation)
+                        {
+                            throw new InvalidPluginExecutionException(
+                                "Another Event is already scheduled at this location during the selected date and time.");
+                        }
                     }
                 }
-            }
-            catch (InvalidPluginExecutionException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidPluginExecutionException(
-                    "Error validating overlapping Events: " + ex.ToString());
+                catch (InvalidPluginExecutionException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidPluginExecutionException(
+                        "Error validating overlapping Events: " + ex.Message);
+                }
             }
         }
     }
-}
