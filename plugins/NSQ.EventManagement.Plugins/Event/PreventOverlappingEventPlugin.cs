@@ -11,7 +11,9 @@ namespace NSQ.EventManagement.Plugins.Event
     public class PreventOverlappingEventPlugin : IPlugin
    
         {
-            public void Execute(IServiceProvider serviceProvider)
+   
+
+        public void Execute(IServiceProvider serviceProvider)
             {
                 try
                 {
@@ -36,24 +38,26 @@ namespace NSQ.EventManagement.Plugins.Event
                     {
                         return;
                     }
+                throw new InvalidPluginExecutionException(
+"PreventOverlappingEventPlugin Fired");
 
-                    // Pre-Image (Update only) supplies values not in Target
-                    Entity preImage = context.PreEntityImages.Contains("PreImage")
+                // Pre-Image (Update only) supplies values not in Target
+                Entity preImage = context.PreEntityImages.Contains("PreImage")
                         ? context.PreEntityImages["PreImage"]
                         : null;
 
                     // Use Target value if present, otherwise Pre-Image value
-                    DateTime? startDate = target.Contains("hpst_startdate")
-                        ? target.GetAttributeValue<DateTime?>("hpst_startdate")
-                        : preImage?.GetAttributeValue<DateTime?>("hpst_startdate");
+                    DateTime? startDate = target.Contains("hpst_StartDate")
+                        ? target.GetAttributeValue<DateTime?>("hpst_StartDate")
+                        : preImage?.GetAttributeValue<DateTime?>("hpst_StartDate");
 
-                    DateTime? endDate = target.Contains("hpst_enddate")
-                        ? target.GetAttributeValue<DateTime?>("hpst_enddate")
-                        : preImage?.GetAttributeValue<DateTime?>("hpst_enddate");
+                    DateTime? endDate = target.Contains("hpst_EndDate")
+                        ? target.GetAttributeValue<DateTime?>("hpst_EndDate")
+                        : preImage?.GetAttributeValue<DateTime?>("hpst_EndDate");
 
-                    string location = target.Contains("hpst_location")
-                        ? target.GetAttributeValue<string>("hpst_location")
-                        : preImage?.GetAttributeValue<string>("hpst_location");
+                    string location = target.Contains("hpst_Location")
+                        ? target.GetAttributeValue<string>("hpst_Location")
+                        : preImage?.GetAttributeValue<string>("hpst_Location");
 
                     // Execute only when all required values exist
                     if (startDate == null || endDate == null ||
@@ -75,17 +79,17 @@ namespace NSQ.EventManagement.Plugins.Event
 
                     query.ColumnSet =
                         new ColumnSet(
-                            "hpst_startdate",
-                            "hpst_enddate",
-                            "hpst_location");
+                            "hpst_StartDate",
+                            "hpst_EndDate",
+                            "hpst_Location");
 
                     // Only active events that overlap the date range
                     //query.Criteria.AddCondition(
                     //    "statecode", ConditionOperator.Equal, 0);
                     query.Criteria.AddCondition(
-                        "hpst_startdate", ConditionOperator.LessThan, endDate.Value);
+                        "hpst_StartDate", ConditionOperator.LessThan, endDate.Value);
                     query.Criteria.AddCondition(
-                        "hpst_enddate", ConditionOperator.GreaterThan, startDate.Value);
+                        "hpst_EndDate", ConditionOperator.GreaterThan, startDate.Value);
 
                     EntityCollection existingEvents =
                         service.RetrieveMultiple(query);
@@ -99,7 +103,7 @@ namespace NSQ.EventManagement.Plugins.Event
                         }
 
                         string existingLocation =
-                            eventRecord.GetAttributeValue<string>("hpst_location");
+                            eventRecord.GetAttributeValue<string>("hpst_Location");
 
                         // Location is multiline text, so compare in code
                         bool sameLocation =
