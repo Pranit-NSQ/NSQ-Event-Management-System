@@ -112,7 +112,11 @@
     <Compile Include="Feedback\PreventSessionDelete.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session\Class1.cs" />
+    <Compile Include="Session\SessionEventDateValidationPlugin1.cs" />
+    <Compile Include="Session\SessionOverlapValidationPlugin.cs" />
+    <Compile Include="Speaker\SpeakerContactDetailRequiredPlugin4.cs" />
     <Compile Include="Speaker\SpeakerDuplicateEmailPhonePlugin1.cs" />
+    <Compile Include="Speaker\SpeakerLinkedInUniquenessPlugin5.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
