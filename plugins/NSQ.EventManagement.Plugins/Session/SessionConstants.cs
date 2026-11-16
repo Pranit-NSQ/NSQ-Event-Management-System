@@ -2,7 +2,7 @@
 {
     internal static class SessionConstants
     {
-        public const string StatusField = "hpst_status";      // verify logical name
+        public const string StatusField = "hpst_status";      
         public const string EndTimeField = "hpst_endtime";
 
         // Verify these against your Status column's choices
